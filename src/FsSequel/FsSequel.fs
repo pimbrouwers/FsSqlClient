@@ -1,4 +1,6 @@
-﻿module Sql 
+﻿namespace FsSequel 
+
+module Sql =
     open System.Data
     open System.Data.SqlClient
 
@@ -7,12 +9,25 @@
         | Text of string
         | StoredProcedure of string
 
+    /// Differentiate the differents types of connection string security
     type SqlConnectionSecurity =
         | IntegratedSecurity of bool
         | UserIDAndPassword of (string * string)
 
     /// Convert a dead-end function to a pass-through function
     let passThrough fn input = fn input |> ignore; input
+
+    /// Encapsulate function in simple try/catch wrapper returning the more friendly `Result<'a,'b>`.
+    let tryCatchAdv fn exnHandler =
+        try 
+            fn |> Ok            
+        with 
+        | ex -> exnHandler ex |> Error
+
+    /// Helper method for `tryCatchAdv` to simply provide the `exn.Message` to the Error path
+    let tryCatch fn =
+        tryCatchAdv fn (fun ex -> ex.Message)
+
    
     // ----------- SqlConnectionStringBuilder ------------
     let createConnectionStringBuilder =
@@ -89,7 +104,7 @@
     let undo name (transaction : SqlTransaction) =
         transaction.Rollback(name)
 
-    
+  
     // ----------- Commands -------------
     
     /// Create a new `SqlCommand`
@@ -146,12 +161,15 @@
     let executeReader (command : SqlCommand) =
         command.ExecuteReader()
 
+
+    // ---------- Helpers -------------
+
     /// Helper method to directly perform an `ExecuteNonQuery` for an existing `SqlConnection`
     let execute text parameters connection =
         use transaction = transact connection
         use cmd = createTypedCommandWithParameters (Text text) parameters transaction
 
-        cmd |> executeNonQuery
+        cmd |> executeNonQuery |> ignore
 
     /// Helper method to directly perform an `ExecuteScalar` for an existing `SqlConnection`
     let scalar text parameters mapScalar connection =
