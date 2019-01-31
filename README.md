@@ -97,6 +97,8 @@ transaction
 ### Bulk Copy
 
 ```f#
+open FsSequel.Sql
+
 let connectionString = createConnectionString "DataSource" "InitialCatalog" ["UserID"] ["Password"]
 let connectionFactory = createOpenConnection 
 use connection = connectionFactory connectrionString
