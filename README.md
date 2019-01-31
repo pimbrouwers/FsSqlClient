@@ -94,6 +94,17 @@ transaction
 |> commit   
 ```
 
+#### Simple `Result<'a,'b>`-based Error Handling
+
+```f#
+use connection = createOpenConnection "your_connection_string"
+let result = tryCatch(connection |> scalar "select 1 as N" [] Convert.ToInt32) 
+
+match result with
+| Ok res -> printfn "%A" res
+| Error msg -> printfn "%s" msg
+```
+
 ### Bulk Copy
 
 ```f#
